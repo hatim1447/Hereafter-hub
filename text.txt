@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title>Qurʾān & Ḥadīth Lifetime Hub</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#00796b">
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUXVyJ2FuICYgSGFkaXRoIExpZmV0aW1lIEh1YiIsInNob3J0X25hbWUiOiJIZXJlQWZ0ZXIiLCJzdGFydF91cmwiOiIuLyIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMwMDc5NmIiLCJ0aGVtZV9jb2xvciI6IiMwMDc5NmIifQ==">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--p:#00796b;--pd:#004c40;--s:#fff;--bg:#f5f5f5;--t:.8s}
+    [data-theme="dark"]{--s:#121212;--bg:#000}
+    *{box-sizing:border-box;font-family:'Readex Pro',sans-serif;margin:0;padding:0}
+    body{background:var(--bg);color:var(--s)}
+    header{background:var(--p);color:#fff;text-align:center;padding:1rem}
+    .container{max-width:800px;margin:auto;padding:1rem}
+    .card{background:var(--s);border-radius:12px;padding:1.2rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,.14)}
+    h2{margin-bottom:.5rem;color:var(--p)}
+    label{font-weight:600;margin:.5rem 0 .2rem;display:block}
+    select,input{width:100%;padding:.5rem;border:1px solid #bdbdbd;border-radius:4px;font-size:1rem}
+    .row{display:flex;gap:.5rem}
+    .row>*{flex:1}
+    button{background:var(--p);color:#fff;border:none;padding:.7rem 1.4rem;border-radius:4px;font-size:1rem;cursor:pointer;transition:background var(--t)}
+    button:active{background:var(--pd)}
+    #result{font-weight:700;margin-top:1rem}
+    #dua{display:none;margin-top:1rem;padding:.9rem;background:#e0f2f1;border-left:4px solid var(--p);font-style:italic}
+    .tasbih-card{display:flex;flex-direction:column;align-items:center}
+    .counter{font-size:2.5rem;font-weight:600;margin:.4rem 0}
+    .dhikr-buttons{display:flex;gap:.4rem;flex-wrap:wrap;justify-content:center}
+    .dhikr-buttons button{background:#fff;color:var(--p);border:1px solid var(--p)}
+  </style>
+
+  <!-- OneSignal (replace YOUR_ONESIGNAL_APP_ID) -->
+  <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
+  <script>
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(() => {
+      OneSignal.init({
+        appId: "YOUR_ONESIGNAL_APP_ID",
+        notifyButton: { enable: true },
+        welcomeNotification: {
+          title: "Daily Qurʾān & Ḥadīth Reminder",
+          message: "We will gently remind you to pray for your loved ones."
+        }
+      });
+    });
+  </script>
+</head>
+
+<body>
+  <header>
+    <h1>Qurʾān & Ḥadīth Lifetime Hub</h1>
+  </header>
+
+  <div class="container">
+
+    <!-- AGE / LIFETIME CARD -->
+    <div class="card">
+      <h2><span class="material-icons">calculate</span> Here-After Lifetime</h2>
+
+      <label>Calendar</label>
+      <select id="calendar">
+        <option value="gregorian">Gregorian</option>
+        <option value="islamic">Islamic (Hijri)</option>
+      </select>
+
+      <label>Status</label>
+      <select id="status" onchange="toggleDeceased()">
+        <option value="living">Living</option>
+        <option value="deceased">Deceased</option>
+      </select>
+
+      <label>Birth Date</label>
+      <div class="row">
+        <select id="bDay"></select>
+        <select id="bMonth"></select>
+        <input type="number" id="bYear" placeholder="Year" min="1" max="9999">
+      </div>
+      <label>Birth Time (optional)</label>
+      <input type="time" id="birthTime">
+
+      <div id="deathSection" style="display:none">
+        <label>Death Date</label>
+        <div class="row">
+          <select id="dDay"></select>
+          <select id="dMonth"></select>
+          <input type="number" id="dYear" placeholder="Year" min="1" max="9999">
+        </div>
+        <label>Death Time (optional)</label>
+        <input type="time" id="deathTime">
+      </div>
+
+      <button onclick="calc()">Calculate</button>
+      <div id="result"></div>
+      <div id="dua">
+        ربِّ اغْفِرْ لِي وَلِوَالِدَيَّ وَلِلْمُؤْمِنِينَ وَالْمُؤْمِنَاتِ يَوْمَ يَقُومُ الْحِسَابُ
+      </div>
+    </div>
+
+    <!-- TASBIH COUNTER CARD -->
+    <div class="card tasbih-card">
+      <h2><span class="material-icons">countertops</span> Tasbīḥ Counter</h2>
+      <div id="dhikrLabel">Subḥān Allāh</div>
+      <div class="counter" id="tasbihCount">0</div>
+      <div class="dhikr-buttons">
+        <button onclick="setDhikr('Subḥān Allāh')">Subḥān Allāh</button>
+        <button onclick="setDhikr('Al-ḥamdu li-llāh')">Al-ḥamdu li-llāh</button>
+        <button onclick="setDhikr('Allāhu akbar')">Allāhu akbar</button>
+        <button onclick="setDhikr(prompt('Custom dhikr:')||'Custom')">Custom</button>
+      </div>
+      <button onclick="addTasbih()" style="margin-top:.5rem">+1</button>
+      <button onclick="resetTasbih()" style="background:#d32f2f">Reset</button>
+    </div>
+
+  </div>
+
+  <script>
+  /* ---------- Calendar helpers ---------- */
+  const hijri = new Intl.DateTimeFormat('en-u-ca-islamic', {year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts;
+  const monthNames = {
+    gregorian: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+    islamic: ["Muh","Saf","Rab1","Rab2","Jum1","Jum2","Raj","Sha","Ram","Shw","DhuQ","DhuH"]
+  };
+  function fillSelects(cal){
+    const days = 30;
+    ["bDay","dDay"].forEach(id=>{
+      const sel = document.getElementById(id);
+      sel.innerHTML = '';
+      for(let i=1;i<=days;i++) sel.appendChild(new Option(i,i));
+    });
+    ["bMonth","dMonth"].forEach(id=>{
+      const sel = document.getElementById(id);
+      sel.innerHTML = '';
+      monthNames[cal].forEach((m,i)=> sel.appendChild(new Option(m,i+1)) );
+    });
+  }
+  function toGregorian(cal, y, m, d, hr=0, min=0, sec=0){
+    if(cal==='gregorian') return new Date(y,m-1,d,hr,min,sec);
+    let date=new Date(), delta=0;
+    while(true){
+      const parts=hijri(date), hy=+parts.find(p=>p.type==='year').value, hm=+parts.find(p=>p.type==='month').value, hd=+parts.find(p=>p.type==='day').value;
+      if(hy===y && hm===m && hd===d) break;
+      date.setDate(date.getDate()+(hd<d?1:-1)); delta++; if(delta>5000) break;
+    }
+    return new Date(date.getFullYear(),date.getMonth(),date.getDate(),hr,min,sec);
+  }
+  function toggleDeceased(){
+    const show=document.getElementById('status').value==='deceased';
+    document.getElementById('deathSection').style.display = show ? 'block' : 'none';
+  }
+  function calc(){
+    const cal=document.getElementById('calendar').value;
+    const bDay=+document.getElementById('bDay').value, bMon=+document.getElementById('bMonth').value, bYr=+document.getElementById('bYear').value;
+    const bTime=document.getElementById('birthTime').value||'00:00'; const [bHr,bMin]=bTime.split(':').map(Number);
+    const birth=toGregorian(cal,bYr,bMon,bDay,bHr,bMin);
+    let end=new Date();
+    if(document.getElementById('status').value==='deceased'){
+      const dDay=+document.getElementById('dDay').value, dMon=+document.getElementById('dMonth').value, dYr=+document.getElementById('dYear').value;
+      const dTime=document.getElementById('deathTime').value||'00:00'; const [dHr,dMin]=dTime.split(':').map(Number);
+      end=toGregorian(cal,dYr,dMon,dDay,dHr,dMin);
+    }
+    const diffMs=end-birth; if(diffMs<0){alert('End date must be after birth'); return;}
+    const worldYears=diffMs/(1000*60*60*24*365.2425);
+    const haDays=worldYears/1000, haHrs=haDays*24, haMins=haHrs*60;
+    document.getElementById('result').innerHTML=`Here-after age: ${haDays.toFixed(6)} days / ${haHrs.toFixed(3)} h / ${haMins.toFixed(1)} min`;
+    const dua=document.getElementById('dua');
+    dua.style.display=document.getElementById('status').value==='deceased'?'block':'none';
+  }
+
+  /* ---------- Tasbih ---------- */
+  let currentDhikr='Subḥān Allāh';
+  let counts=JSON.parse(localStorage.getItem('tasbihCounts')||'{}');
+  function setDhikr(name){
+    currentDhikr=name;
+    document.getElementById('dhikrLabel').textContent=name;
+    document.getElementById('tasbihCount').textContent=counts[name]||0;
+  }
+  function addTasbih(){
+    counts[currentDhikr]=(counts[currentDhikr]||0)+1;
+    document.getElementById('tasbihCount').textContent=counts[currentDhikr];
+    localStorage.setItem('tasbihCounts',JSON.stringify(counts));
+    if(navigator.vibrate) navigator.vibrate(50);
+  }
+  function resetTasbih(){
+    counts[currentDhikr]=0;
+    document.getElementById('tasbihCount').textContent=0;
+    localStorage.setItem('tasbihCounts',JSON.stringify(counts));
+  }
+
+  /* ---------- Init ---------- */
+  fillSelects('gregorian');
+  setDhikr('Subḥān Allāh');
+  document.getElementById('calendar').addEventListener('change',e=>fillSelects(e.target.value));
+  </script>
+</body>
+</html>
